@@ -6,6 +6,7 @@
 #include "freertos/task.h"
 #include "led_driver.h"
 #include "nvs_flash.h"
+#include "wifi_manager.h"
 #include "zigbee_manager.h"
 
 static const char* TAG = "MAIN";
@@ -29,8 +30,11 @@ extern "C" void app_main(void) {
   led_driver_set_color(0, 0, 20);
 
   // Initialize Connectivity
-  ESP_ERROR_CHECK(zigbee_manager_init());
-  ESP_ERROR_CHECK(zigbee_manager_start());
+  ESP_ERROR_CHECK(wifi_manager_init());
+  ESP_ERROR_CHECK(wifi_manager_start());
+
+  // ESP_ERROR_CHECK(zigbee_manager_init());
+  // ESP_ERROR_CHECK(zigbee_manager_start());
 
   // Initialize CLI
   ESP_ERROR_CHECK(cli_manager_init());

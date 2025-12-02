@@ -10,6 +10,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "linenoise/linenoise.h"
+#include "wifi_manager.h"
 #include "zigbee_manager.h"
 
 static const char* TAG = "CLI";
@@ -92,6 +93,20 @@ static int log_level_console(int argc, char** argv) {
   return 0;
 }
 
+static int wifi_set_console(int argc, char** argv) {
+  if (argc != 3) {
+    printf("Usage: wifi_set <ssid> <password>\n");
+    return 1;
+  }
+  wifi_manager_set_credentials(argv[1], argv[2]);
+  return 0;
+}
+
+static int wifi_scan_console(int argc, char** argv) {
+  wifi_manager_scan();
+  return 0;
+}
+
 /* Initialization */
 
 esp_err_t cli_manager_init(void) {
@@ -149,6 +164,28 @@ esp_err_t cli_manager_init(void) {
       .context = NULL,
   };
   ESP_ERROR_CHECK(esp_console_cmd_register(&log_level_cmd));
+
+  const esp_console_cmd_t wifi_set_cmd = {
+      .command = "wifi_set",
+      .help = "Set WiFi credentials: wifi_set <ssid> <password>",
+      .hint = NULL,
+      .func = &wifi_set_console,
+      .argtable = NULL,
+      .func_w_context = NULL,
+      .context = NULL,
+  };
+  ESP_ERROR_CHECK(esp_console_cmd_register(&wifi_set_cmd));
+
+  const esp_console_cmd_t wifi_scan_cmd = {
+      .command = "wifi_scan",
+      .help = "Scan for available WiFi networks",
+      .hint = NULL,
+      .func = &wifi_scan_console,
+      .argtable = NULL,
+      .func_w_context = NULL,
+      .context = NULL,
+  };
+  ESP_ERROR_CHECK(esp_console_cmd_register(&wifi_scan_cmd));
 
   /* Install console REPL */
   esp_console_dev_uart_config_t hw_config = ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();
