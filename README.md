@@ -10,9 +10,15 @@ This is the firmware for the central hub of the Smart Home system, running on an
 ## Project Structure
 
 *   `src/main`: Main application entry point.
+*   `src/cli`: UART Command Line Interface (Debugging).
 *   `src/connectivity`: Zigbee stack management.
 *   `src/drivers`: Hardware drivers (LEDs, etc.).
 *   `partitions.csv`: Custom partition table for Zigbee storage.
+
+## Debugging
+
+This firmware includes a built-in CLI for debugging.
+See [docs/DEBUGGING.md](docs/DEBUGGING.md) for details on available commands (`restart`, `free`, `zb_info`, `log_level`).
 
 ## How to Build and Flash
 

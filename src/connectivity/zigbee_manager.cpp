@@ -134,3 +134,18 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t* signal_struct) {
       break;
   }
 }
+
+void zigbee_manager_print_status(void) {
+  if (esp_zb_bdb_is_factory_new()) {
+    ESP_LOGI(TAG, "Status: Factory New Device");
+  } else {
+    esp_zb_ieee_addr_t ext_pan_id;
+    esp_zb_get_extended_pan_id(ext_pan_id);
+    ESP_LOGI(TAG, "Status: Joined/Formed Network");
+    ESP_LOGI(TAG, "Extended PAN ID: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", ext_pan_id[7], ext_pan_id[6],
+             ext_pan_id[5], ext_pan_id[4], ext_pan_id[3], ext_pan_id[2], ext_pan_id[1], ext_pan_id[0]);
+    ESP_LOGI(TAG, "PAN ID: 0x%04x", esp_zb_get_pan_id());
+    ESP_LOGI(TAG, "Channel: %d", esp_zb_get_current_channel());
+    ESP_LOGI(TAG, "Short Address: 0x%04x", esp_zb_get_short_address());
+  }
+}

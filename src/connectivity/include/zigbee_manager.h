@@ -15,3 +15,8 @@ esp_err_t zigbee_manager_init(void);
  * @return esp_err_t ESP_OK on success.
  */
 esp_err_t zigbee_manager_start(void);
+
+/**
+ * @brief Print the current Zigbee network status to the log/console.
+ */
+void zigbee_manager_print_status(void);

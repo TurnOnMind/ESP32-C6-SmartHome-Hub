@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "cli_manager.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -31,8 +32,10 @@ extern "C" void app_main(void) {
   ESP_ERROR_CHECK(zigbee_manager_init());
   ESP_ERROR_CHECK(zigbee_manager_start());
 
+  // Initialize CLI
+  ESP_ERROR_CHECK(cli_manager_init());
+
   while (1) {
-    ESP_LOGI(TAG, "Heartbeat: System Alive");
     led_driver_toggle();
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
