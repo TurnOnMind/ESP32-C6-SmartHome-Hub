@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "bluetooth_manager.h"
 #include "esp_console.h"
 #include "esp_log.h"
 #include "esp_system.h"
@@ -107,6 +108,15 @@ static int wifi_scan_console(int argc, char** argv) {
   return 0;
 }
 
+static int ble_scan_console(int argc, char** argv) {
+  int duration = 5;
+  if (argc == 2) {
+    duration = atoi(argv[1]);
+  }
+  bluetooth_manager_start_scan(duration);
+  return 0;
+}
+
 /* Initialization */
 
 esp_err_t cli_manager_init(void) {
@@ -186,6 +196,17 @@ esp_err_t cli_manager_init(void) {
       .context = NULL,
   };
   ESP_ERROR_CHECK(esp_console_cmd_register(&wifi_scan_cmd));
+
+  const esp_console_cmd_t ble_scan_cmd = {
+      .command = "ble_scan",
+      .help = "Scan for BLE devices: ble_scan [duration_sec]",
+      .hint = NULL,
+      .func = &ble_scan_console,
+      .argtable = NULL,
+      .func_w_context = NULL,
+      .context = NULL,
+  };
+  ESP_ERROR_CHECK(esp_console_cmd_register(&ble_scan_cmd));
 
   /* Install console REPL */
   esp_console_dev_uart_config_t hw_config = ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();

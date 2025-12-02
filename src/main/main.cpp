@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "bluetooth_manager.h"
 #include "cli_manager.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -32,6 +33,8 @@ extern "C" void app_main(void) {
   // Initialize Connectivity
   ESP_ERROR_CHECK(wifi_manager_init());
   ESP_ERROR_CHECK(wifi_manager_start());
+
+  ESP_ERROR_CHECK(bluetooth_manager_init());
 
   // ESP_ERROR_CHECK(zigbee_manager_init());
   // ESP_ERROR_CHECK(zigbee_manager_start());
