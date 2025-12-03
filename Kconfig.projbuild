@@ -1,0 +1,2 @@
+comment "Project-specific Kconfig options moved to src/main/Kconfig.projbuild"
+source "src/main/Kconfig.projbuild"
