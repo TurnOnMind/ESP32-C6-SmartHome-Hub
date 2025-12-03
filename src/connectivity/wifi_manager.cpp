@@ -2,6 +2,8 @@
 
 #include <string.h>
 
+#define DEBUG_TAG "WIFI_MGR"
+#include "../debug/include/debug/Debug.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_wifi.h"
@@ -10,7 +12,7 @@
 #include "freertos/task.h"
 #include "nvs_flash.h"
 
-static const char* TAG = "WIFI_MGR";
+static const char* TAG = DEBUG_TAG;
 
 static bool s_is_connected = false;
 static bool s_retry_enabled = true;
@@ -44,7 +46,8 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
         esp_err_t err = esp_wifi_scan_get_ap_records(&number, ap_info);
         if (err == ESP_OK) {
           for (int i = 0; i < number; i++) {
-            ESP_LOGI(TAG, "SSID: %-32s | RSSI: %d | Auth: %d", ap_info[i].ssid, ap_info[i].rssi, ap_info[i].authmode);
+            ESP_LOGI(TAG, "SSID: %-32s | RSSI: %d | Ch: %d | Auth: %d", ap_info[i].ssid, ap_info[i].rssi,
+                     ap_info[i].primary, ap_info[i].authmode);
           }
         } else {
           ESP_LOGE(TAG, "Failed to get AP records: %s", esp_err_to_name(err));
@@ -58,6 +61,7 @@ static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_
 }
 
 esp_err_t wifi_manager_init(void) {
+  DEBUG_FUNC_ENTER();
   // Initialize NVS (needed for WiFi storage)
   esp_err_t ret = nvs_flash_init();
   if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -73,28 +77,56 @@ esp_err_t wifi_manager_init(void) {
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
+  // Use MAX_MODEM power save for improved station stability
+  ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_MAX_MODEM));
+
   ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
   ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
 
+  DEBUG_FUNC_EXIT();
   return ESP_OK;
 }
 
 esp_err_t wifi_manager_start(void) {
+  DEBUG_FUNC_ENTER();
   wifi_config_t wifi_cfg;
   if (esp_wifi_get_config(WIFI_IF_STA, &wifi_cfg) == ESP_OK) {
     if (strlen((const char*)wifi_cfg.sta.ssid) > 0) {
       ESP_LOGI(TAG, "Found saved credentials for SSID: %s", wifi_cfg.sta.ssid);
       ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
       ESP_ERROR_CHECK(esp_wifi_start());
+      DEBUG_FUNC_EXIT();
       return ESP_OK;
     }
   }
 
   ESP_LOGI(TAG, "No saved credentials found. Use CLI to set WiFi.");
+  DEBUG_FUNC_EXIT();
   return ESP_OK;
 }
 
+bool wifi_manager_is_connected(void) {
+  DEBUG_FUNC_ENTER();
+  const bool connected = s_is_connected;
+  DEBUG_FUNC_EXIT();
+  return connected;
+}
+
+esp_err_t wifi_manager_get_rssi(int* rssi) {
+  DEBUG_FUNC_ENTER();
+  wifi_ap_record_t ap_info;
+  if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
+    *rssi = ap_info.rssi;
+    DEBUG_FUNC_EXIT();
+    return ESP_OK;
+  }
+  DEBUG_FUNC_EXIT();
+  return ESP_FAIL;
+}
+
 esp_err_t wifi_manager_set_credentials(const char* ssid, const char* password) {
+  DEBUG_FUNC_ENTER();
+  DEBUG_PARAM_STR("ssid", ssid);
   wifi_config_t wifi_config = {};
   strncpy((char*)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
   strncpy((char*)wifi_config.sta.password, password, sizeof(wifi_config.sta.password));
@@ -116,10 +148,12 @@ esp_err_t wifi_manager_set_credentials(const char* ssid, const char* password) {
   ESP_ERROR_CHECK(esp_wifi_start());
   // esp_wifi_connect() is called by the WIFI_EVENT_STA_START event handler
 
+  DEBUG_FUNC_EXIT();
   return ESP_OK;
 }
 
 esp_err_t wifi_manager_scan(void) {
+  DEBUG_FUNC_ENTER();
   // Disable retry mechanism to prevent interference with the scan
   s_retry_enabled = false;
   esp_wifi_disconnect();
@@ -136,9 +170,6 @@ esp_err_t wifi_manager_scan(void) {
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "Failed to start scan: %s", esp_err_to_name(err));
   }
+  DEBUG_FUNC_EXIT_RC(err);
   return err;
-}
-
-bool wifi_manager_is_connected(void) {
-  return s_is_connected;
 }
