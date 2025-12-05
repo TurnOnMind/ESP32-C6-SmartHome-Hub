@@ -11,7 +11,7 @@ This is the WiFi/BLE + automation brain for the Smart Home system, running on an
 
 *   `src/main`: Main application entry point.
 *   `src/cli`: UART Command Line Interface (Debugging).
-*   `src/connectivity`: WiFi/BLE managers plus the `zigbee_link` UART bridge to the ESP32-H2.
+*   `src/connectivity`: WiFi/BLE managers plus the `uart_link` UART bridge to the ESP32-H2.
 *   `src/drivers`: Hardware drivers (LEDs, etc.).
 *   `partitions.csv`: Custom partition table that keeps OTA slots plus a `zb_proxy` partition for mirrored Zigbee metadata received from the H2.
 
@@ -21,8 +21,8 @@ This is the WiFi/BLE + automation brain for the Smart Home system, running on an
 | ------------------- | ------------- | ------------- | ----------------------------------------------- |
 | UART TX (C6 → H2)   | GPIO4 (U1TXD) | GPIO6 (U1RXD) | Command/control frames                          |
 | UART RX (H2 → C6)   | GPIO5 (U1RXD) | GPIO7 (U1TXD) | Attribute updates + events                      |
-| UART RTS (optional) | GPIO12        | GPIO10        | Enable via `CONFIG_APP_ZB_LINK_USE_HW_FLOWCTRL` |
-| UART CTS (optional) | GPIO13        | GPIO11        | Enable via `CONFIG_APP_ZB_LINK_USE_HW_FLOWCTRL` |
+| UART RTS (optional) | GPIO12        | GPIO10        | Enable via `CONFIG_APP_UART_LINK_USE_HW_FLOWCTRL` |
+| UART CTS (optional) | GPIO13        | GPIO11        | Enable via `CONFIG_APP_UART_LINK_USE_HW_FLOWCTRL` |
 
 All link settings (baud rate, pins, flow control) can be tweaked under `menuconfig → Application Configuration`.
 

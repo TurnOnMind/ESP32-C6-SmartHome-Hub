@@ -21,8 +21,8 @@
 #include "lwip/sockets.h"
 #include "ping/ping_sock.h"
 #include "sdkconfig.h"
+#include "uart_link.h"
 #include "wifi_manager.h"
-#include "zigbee_link.h"
 
 static const char* TAG = DEBUG_TAG;
 
@@ -71,20 +71,20 @@ static int free_mem_console(int argc, char** argv) {
 
 static int zb_info_console(int argc, char** argv) {
   g_logging_paused = false;
-  zigbee_link_print_status();
+  uart_link_print_status();
   return 0;
 }
 
 static int zb_suspend_console(int argc, char** argv) {
   g_logging_paused = false;
-  zigbee_link_suspend();
+  uart_link_suspend();
   printf("Zigbee UART bridge paused\n");
   return 0;
 }
 
 static int zb_resume_console(int argc, char** argv) {
   g_logging_paused = false;
-  zigbee_link_resume();
+  uart_link_resume();
   printf("Zigbee UART bridge resumed\n");
   return 0;
 }
@@ -92,7 +92,7 @@ static int zb_resume_console(int argc, char** argv) {
 static int zb_debug_console(int argc, char** argv) {
   g_logging_paused = false;
   if (argc == 1) {
-    printf("Zigbee UART debug is %s\n", zigbee_link_is_debug_enabled() ? "ON" : "OFF");
+    printf("Zigbee UART debug is %s\n", uart_link_is_debug_enabled() ? "ON" : "OFF");
     return 0;
   }
   if (argc != 2) {
@@ -100,15 +100,15 @@ static int zb_debug_console(int argc, char** argv) {
     return 1;
   }
   if (strcmp(argv[1], "status") == 0) {
-    printf("Zigbee UART debug is %s\n", zigbee_link_is_debug_enabled() ? "ON" : "OFF");
+    printf("Zigbee UART debug is %s\n", uart_link_is_debug_enabled() ? "ON" : "OFF");
     return 0;
   }
   if (strcmp(argv[1], "on") == 0) {
-    zigbee_link_set_debug(true);
+    uart_link_set_debug(true);
     return 0;
   }
   if (strcmp(argv[1], "off") == 0) {
-    zigbee_link_set_debug(false);
+    uart_link_set_debug(false);
     return 0;
   }
   printf("Usage: zb_debug <on|off|status>\n");
@@ -117,20 +117,20 @@ static int zb_debug_console(int argc, char** argv) {
 
 static int zb_handshake_console(int argc, char** argv) {
   g_logging_paused = false;
-  zigbee_link_send_manual_handshake();
+  uart_link_send_manual_handshake();
   return 0;
 }
 
 static int zb_check_console(int argc, char** argv) {
   g_logging_paused = false;
-  uint32_t timeout_ms = CONFIG_APP_ZB_LINK_HANDSHAKE_TIMEOUT_MS;
+  uint32_t timeout_ms = CONFIG_APP_UART_LINK_HANDSHAKE_TIMEOUT_MS;
   if (argc == 2) {
     timeout_ms = (uint32_t)atoi(argv[1]);
   } else if (argc > 2) {
     printf("Usage: zb_check [timeout_ms]\n");
     return 1;
   }
-  esp_err_t err = zigbee_link_run_startup_check(timeout_ms);
+  esp_err_t err = uart_link_run_startup_check(timeout_ms);
   if (err == ESP_OK) {
     printf("Handshake OK (remote role confirmed)\n");
     return 0;
@@ -141,6 +141,32 @@ static int zb_check_console(int argc, char** argv) {
     printf("Handshake failed: %s\n", esp_err_to_name(err));
   }
   return err == ESP_OK ? 0 : 1;
+}
+
+static int zb_mode_console(int argc, char** argv) {
+  g_logging_paused = false;
+  if (argc != 2) {
+    printf("Usage: zb_mode <status|end|router>\n");
+    return 1;
+  }
+  char buffer[32] = {0};
+  if (strcmp(argv[1], "status") == 0 || strcmp(argv[1], "?") == 0) {
+    strcpy(buffer, "mode?");
+  } else if (strcmp(argv[1], "router") == 0 || strcmp(argv[1], "hub") == 0) {
+    strcpy(buffer, "mode:router");
+  } else if (strcmp(argv[1], "end") == 0 || strcmp(argv[1], "enddevice") == 0) {
+    strcpy(buffer, "mode:end");
+  } else {
+    printf("Usage: zb_mode <status|end|router>\n");
+    return 1;
+  }
+  esp_err_t err = uart_link_send_text(buffer);
+  if (err != ESP_OK) {
+    printf("Failed to send Zigbee mode command: %s\n", esp_err_to_name(err));
+    return 1;
+  }
+  printf("Sent Zigbee mode command: %s\n", buffer);
+  return 0;
 }
 
 static int log_level_console(int argc, char** argv) {
@@ -430,6 +456,17 @@ esp_err_t cli_manager_init(void) {
       .context = NULL,
   };
   ESP_ERROR_CHECK(esp_console_cmd_register(&zb_check_cmd));
+
+  const esp_console_cmd_t zb_mode_cmd = {
+      .command = "zb_mode",
+      .help = "Query or update the ESP32-H2 Zigbee role",
+      .hint = NULL,
+      .func = &zb_mode_console,
+      .argtable = NULL,
+      .func_w_context = NULL,
+      .context = NULL,
+  };
+  ESP_ERROR_CHECK(esp_console_cmd_register(&zb_mode_cmd));
 
   const esp_console_cmd_t log_level_cmd = {
       .command = "log_level",

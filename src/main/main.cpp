@@ -8,8 +8,8 @@
 #include "led_driver.h"
 #include "nvs_flash.h"
 #include "sdkconfig.h"
+#include "uart_link.h"
 #include "wifi_manager.h"
-#include "zigbee_link.h"
 
 static const char* TAG = "MAIN";
 
@@ -49,11 +49,11 @@ extern "C" void app_main(void) {
   }
 
   ESP_ERROR_CHECK(bluetooth_manager_init());
-#if CONFIG_APP_ENABLE_ZB_LINK
-  printf("DEBUG: Calling zigbee_link_init\n");
-  ESP_ERROR_CHECK(zigbee_link_init());
-  printf("DEBUG: zigbee_link_init returned\n");
-  esp_err_t hs = zigbee_link_run_startup_check(CONFIG_APP_ZB_LINK_HANDSHAKE_TIMEOUT_MS);
+#if CONFIG_APP_ENABLE_UART_LINK
+  printf("DEBUG: Calling uart_link_init\n");
+  ESP_ERROR_CHECK(uart_link_init());
+  printf("DEBUG: uart_link_init returned\n");
+  esp_err_t hs = uart_link_run_startup_check(CONFIG_APP_UART_LINK_HANDSHAKE_TIMEOUT_MS);
   if (hs == ESP_OK) {
     ESP_LOGI(TAG, "UART handshake with Zigbee co-processor OK");
   } else if (hs == ESP_ERR_TIMEOUT) {

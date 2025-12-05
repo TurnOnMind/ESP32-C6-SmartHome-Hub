@@ -1,56 +1,63 @@
 menu "Application Configuration"
 
-config APP_ENABLE_ZB_LINK
+config ACTIVITY_LED_GPIO
+    int "UART activity LED data GPIO"
+    default 8
+    help
+        GPIO connected to the addressable RGB LED used to visualize
+        UART traffic and system state on the ESP32-C6 hub.
+
+config APP_ENABLE_UART_LINK
     bool "Enable UART bridge to Zigbee co-processor"
     default y
     help
         When enabled, the ESP32-C6 brings up UART hardware to exchange
         Zigbee events with the dedicated ESP32-H2 board.
 
-if APP_ENABLE_ZB_LINK
+if APP_ENABLE_UART_LINK
 
-config APP_ZB_LINK_UART_PORT
+config APP_UART_LINK_UART_PORT
     int "UART controller"
     range 0 2
     default 1
     help
         Select which UART peripheral is dedicated to the Zigbee link.
 
-config APP_ZB_LINK_UART_BAUDRATE
+config APP_UART_LINK_UART_BAUDRATE
     int "UART baud rate"
     default 115200
     help
         Baud rate for the inter-controller serial link.
 
-config APP_ZB_LINK_UART_TX_PIN
+config APP_UART_LINK_UART_TX_PIN
     int "UART TX GPIO (C6 -> H2)"
     default 15
     help
         GPIO used for UART TX toward the ESP32-H2.
 
-config APP_ZB_LINK_UART_RX_PIN
+config APP_UART_LINK_UART_RX_PIN
     int "UART RX GPIO (H2 -> C6)"
     default 23
     help
         GPIO used for UART RX coming from the ESP32-H2.
 
-config APP_ZB_LINK_USE_HW_FLOWCTRL
+config APP_UART_LINK_USE_HW_FLOWCTRL
     bool "Use RTS/CTS flow control"
     default n
     help
         Enable this if RTS/CTS wires are connected between the boards.
 
-config APP_ZB_LINK_UART_RTS_PIN
+config APP_UART_LINK_UART_RTS_PIN
     int "UART RTS GPIO"
-    depends on APP_ZB_LINK_USE_HW_FLOWCTRL
+    depends on APP_UART_LINK_USE_HW_FLOWCTRL
     default 12
 
-config APP_ZB_LINK_UART_CTS_PIN
+config APP_UART_LINK_UART_CTS_PIN
     int "UART CTS GPIO"
-    depends on APP_ZB_LINK_USE_HW_FLOWCTRL
+    depends on APP_UART_LINK_USE_HW_FLOWCTRL
     default 13
 
-config APP_ZB_LINK_DEBUG_LOGS
+config APP_UART_LINK_DEBUG_LOGS
     bool "Enable verbose UART debug logs"
     default n
     help
@@ -58,7 +65,7 @@ config APP_ZB_LINK_DEBUG_LOGS
         Zigbee link is logged with metadata. Useful for bring-up but
         noisy for normal operation.
 
-config APP_ZB_LINK_HANDSHAKE_TIMEOUT_MS
+config APP_UART_LINK_HANDSHAKE_TIMEOUT_MS
     int "Startup handshake timeout (ms)"
     range 100 10000
     default 3000
@@ -66,6 +73,6 @@ config APP_ZB_LINK_HANDSHAKE_TIMEOUT_MS
         How long the hub should wait for the ESP32-H2 to respond to the
         startup handshake check before timing out.
 
-endif # APP_ENABLE_ZB_LINK
+endif # APP_ENABLE_UART_LINK
 
 endmenu
